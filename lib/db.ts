@@ -18,6 +18,10 @@ export interface Empresa {
   bot_color_primario?: string;
   bot_color_secundario?: string;
   catalogo_imagen_url?: string;
+  // WhatsApp Integration
+  whatsapp_token?: string;
+  whatsapp_phone_id?: string;
+  whatsapp_verify_token?: string;
 }
 
 export interface Perfil {
