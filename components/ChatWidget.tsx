@@ -227,10 +227,11 @@ export default function ChatWidget({
   const primaryContrast = getContrastColor(primaryColor);
   const botName = config.bot_nombre || 'Asistente Virtual';
 
-  const isAbsolute = absolutePosition || isIframe;
-  const containerClass = isAbsolute
+  const containerClass = absolutePosition
     ? "absolute bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-2 pointer-events-none font-sans"
-    : "fixed bottom-5 right-5 z-50 flex flex-col items-end font-sans";
+    : isIframe
+      ? "fixed bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-2 pointer-events-none font-sans"
+      : "fixed bottom-5 right-5 z-50 flex flex-col items-end font-sans";
 
   return (
     <div className={containerClass}>
