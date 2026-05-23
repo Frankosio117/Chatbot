@@ -339,14 +339,20 @@ export async function getMetricsPorEmpresa(empresaId: string) {
     
   if (convError) console.error('Error fetching total conversations:', convError);
 
-  // 2. Total Leads (conversations with whatsapp phone registered)
+  // 2. Total Leads (conversations with name or phone registered - aligning with leads page logic)
   const { count: totalLeads, error: leadError } = await supabaseClient
     .from('conversaciones')
     .select('*', { count: 'exact', head: true })
     .eq('empresa_id', empresaId)
-    .not('cliente_whatsapp', 'is', null);
+    .or('cliente_nombre.not.is.null,cliente_whatsapp.not.is.null');
 
   if (leadError) console.error('Error fetching total leads:', leadError);
+
+  // Helper local para formatear fechas de manera determinista en español (evita desajustes por locale del navegador)
+  const formatDateKey = (date: Date): string => {
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return `${date.getDate()} ${months[date.getMonth()]}`;
+  };
 
   // 3. Total Mensajes
   const { data: convs } = await supabaseClient
@@ -387,11 +393,11 @@ export async function getMetricsPorEmpresa(empresaId: string) {
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        msgGroups[d.toLocaleDateString([], { month: 'short', day: 'numeric' })] = 0;
+        msgGroups[formatDateKey(d)] = 0;
       }
 
       msgsData.forEach((m) => {
-        const dateStr = new Date(m.fecha).toLocaleDateString([], { month: 'short', day: 'numeric' });
+        const dateStr = formatDateKey(new Date(m.fecha));
         if (msgGroups[dateStr] !== undefined) {
           msgGroups[dateStr]++;
         }
@@ -412,12 +418,12 @@ export async function getMetricsPorEmpresa(empresaId: string) {
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    convGroups[d.toLocaleDateString([], { month: 'short', day: 'numeric' })] = 0;
+    convGroups[formatDateKey(d)] = 0;
   }
 
   if (convsData) {
     convsData.forEach((c) => {
-      const dateStr = new Date(c.fecha_inicio).toLocaleDateString([], { month: 'short', day: 'numeric' });
+      const dateStr = formatDateKey(new Date(c.fecha_inicio));
       if (convGroups[dateStr] !== undefined) {
         convGroups[dateStr]++;
       }
