@@ -20,16 +20,35 @@ export async function middleware(request: NextRequest) {
       {
         cookies: {
           getAll() {
-            return request.cookies.getAll().map(({ name, value }) => ({ name, value }));
+            try {
+              return request.cookies.getAll().map(({ name, value }) => ({ name, value }));
+            } catch (err) {
+              console.error('Middleware: Error in cookies.getAll:', err);
+              return [];
+            }
           },
           setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-            supabaseResponse = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              supabaseResponse.cookies.set(name, value, options)
-            );
+            try {
+              cookiesToSet.forEach(({ name, value }) => {
+                try {
+                  request.cookies.set(name, value);
+                } catch (err) {
+                  // request.cookies.set no es soportado en algunas versiones de Next.js
+                }
+              });
+              supabaseResponse = NextResponse.next({
+                request,
+              });
+              cookiesToSet.forEach(({ name, value, options }) => {
+                try {
+                  supabaseResponse.cookies.set(name, value, options);
+                } catch (err) {
+                  console.error('Middleware: Error setting cookie on response:', err);
+                }
+              });
+            } catch (err) {
+              console.error('Middleware: Error in cookies.setAll:', err);
+            }
           },
         },
       }
