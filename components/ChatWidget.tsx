@@ -10,6 +10,7 @@ interface ChatWidgetProps {
   // Override colors for playground preview
   overrideColorPrimario?: string;
   overrideColorSecundario?: string;
+  absolutePosition?: boolean;
 }
 
 interface Message {
@@ -48,11 +49,28 @@ export default function ChatWidget({
   previewInstructions,
   overrideColorPrimario,
   overrideColorSecundario,
+  absolutePosition,
 }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isIframe, setIsIframe] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const inIframe = typeof window !== 'undefined' && window.self !== window.top;
+    setIsIframe(inIframe);
+    if (inIframe) {
+      window.parent.postMessage('chat-close', '*');
+    }
+  }, []);
+
+  const handleToggleOpen = (newOpen: boolean) => {
+    setIsOpen(newOpen);
+    if (typeof window !== 'undefined') {
+      window.parent.postMessage(newOpen ? 'chat-open' : 'chat-close', '*');
+    }
+  };
   const [conversacionId, setConversacionId] = useState<string | null>(null);
   const [resolvedEmpresaId, setResolvedEmpresaId] = useState<string | null>(null);
   const [cliente, setCliente] = useState<{ nombre: string | null; whatsapp: string | null }>({
@@ -209,13 +227,18 @@ export default function ChatWidget({
   const primaryContrast = getContrastColor(primaryColor);
   const botName = config.bot_nombre || 'Asistente Virtual';
 
+  const isAbsolute = absolutePosition || isIframe;
+  const containerClass = isAbsolute
+    ? "absolute bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-3 pointer-events-none font-sans"
+    : "fixed bottom-5 right-5 z-50 flex flex-col items-end font-sans";
+
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end font-sans">
+    <div className={containerClass}>
 
       {/* Chat Window */}
       {isOpen && (
         <div
-          className="mb-3 w-[360px] sm:w-[400px] h-[540px] border border-zinc-800/80 rounded-2xl shadow-2xl shadow-black/60 flex flex-col overflow-hidden animate-scale-in"
+          className="mb-3 w-[360px] sm:w-[400px] h-[540px] border border-zinc-800/80 rounded-2xl shadow-2xl shadow-black/60 flex flex-col overflow-hidden animate-scale-in pointer-events-auto"
           style={{ background: secondaryColor }}
         >
           {/* Header */}
@@ -254,7 +277,7 @@ export default function ChatWidget({
               <button onClick={handleRestart} className="p-1.5 rounded-lg transition-colors opacity-70 hover:opacity-100" style={{ color: primaryContrast }}>
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => setIsOpen(false)} className="p-1.5 rounded-lg transition-colors opacity-70 hover:opacity-100" style={{ color: primaryContrast }}>
+              <button onClick={() => handleToggleOpen(false)} className="p-1.5 rounded-lg transition-colors opacity-70 hover:opacity-100" style={{ color: primaryContrast }}>
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -373,8 +396,8 @@ export default function ChatWidget({
 
       {/* Floating Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="rounded-full flex items-center justify-center shadow-xl active:scale-95 hover:scale-105 transition-all duration-200 animate-pulse-glow"
+        onClick={() => handleToggleOpen(!isOpen)}
+        className="rounded-full flex items-center justify-center shadow-xl active:scale-95 hover:scale-105 transition-all duration-200 animate-pulse-glow pointer-events-auto"
         style={{
           width: '52px', height: '52px',
           background: primaryColor,

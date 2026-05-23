@@ -266,7 +266,7 @@ export default function PlaygroundPage() {
               </div>
 
               {/* ChatWidget inside preview */}
-              <ChatWidget key={key} empresaId={empresaId} />
+              <ChatWidget key={key} empresaId={empresaId} absolutePosition />
             </div>
 
             {/* Footer hint */}

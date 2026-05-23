@@ -8,7 +8,9 @@ import { getEmpresas, getEmpresa, createEmpresa } from '@/lib/db';
 export default function EmbedPage() {
   const [empresaId, setEmpresaId] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'script' | 'iframe'>('script');
+  const [copiedScript, setCopiedScript] = useState(false);
+  const [copiedIframe, setCopiedIframe] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -67,21 +69,79 @@ export default function EmbedPage() {
 
   const embedUrl = empresaId ? `${baseUrl}/embed/${empresaId}` : '';
   
+  const scriptCode = empresaId
+    ? `<!-- AgentSaaS Chatbot Widget (Recomendado) -->
+<script>
+  (function() {
+    var empresaId = "${empresaId}";
+    var baseUrl = "${baseUrl || 'https://tu-dominio.com'}";
+    var id = "agentsaas-widget-" + empresaId;
+    if (document.getElementById(id)) return;
+
+    var iframe = document.createElement('iframe');
+    iframe.id = id;
+    iframe.src = baseUrl + '/embed/' + empresaId;
+    iframe.style.position = 'fixed';
+    iframe.style.bottom = '20px';
+    iframe.style.right = '20px';
+    iframe.style.width = '80px';
+    iframe.style.height = '80px';
+    iframe.style.border = 'none';
+    iframe.style.zIndex = '999999';
+    iframe.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+    iframe.style.background = 'transparent';
+    iframe.setAttribute('allow', 'microphone');
+    iframe.setAttribute('title', 'Chat de soporte');
+    
+    document.body.appendChild(iframe);
+
+    window.addEventListener('message', function(event) {
+      if (event.origin !== baseUrl) return;
+      if (event.data === 'chat-open') {
+        if (window.innerWidth < 640) {
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          iframe.style.bottom = '0';
+          iframe.style.right = '0';
+        } else {
+          iframe.style.width = '400px';
+          iframe.style.height = '620px';
+          iframe.style.bottom = '20px';
+          iframe.style.right = '20px';
+        }
+      } else if (event.data === 'chat-close') {
+        iframe.style.width = '80px';
+        iframe.style.height = '80px';
+        iframe.style.bottom = '20px';
+        iframe.style.right = '20px';
+      }
+    });
+  })();
+</script>
+<!-- Fin AgentSaaS Widget -->`
+    : '<!-- Cargando... -->';
+
   const iframeCode = empresaId
-    ? `<!-- AgentSaaS Chatbot Widget -->
+    ? `<!-- AgentSaaS Chatbot Widget (Estático) -->
 <iframe
   src="${embedUrl}"
-  style="position:fixed;bottom:0;right:0;width:420px;height:600px;border:none;z-index:9999;background:transparent;"
+  style="position:fixed;bottom:20px;right:20px;width:400px;height:620px;border:none;z-index:999999;background:transparent;"
   allow="microphone"
   title="Chat de soporte"
 ></iframe>
 <!-- Fin AgentSaaS Widget -->`
-    : '<!-- Cargando...-->';
+    : '<!-- Cargando... -->';
 
-  const handleCopy = async () => {
+  const handleCopyScript = async () => {
+    await navigator.clipboard.writeText(scriptCode);
+    setCopiedScript(true);
+    setTimeout(() => setCopiedScript(false), 2000);
+  };
+
+  const handleCopyIframe = async () => {
     await navigator.clipboard.writeText(iframeCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedIframe(true);
+    setTimeout(() => setCopiedIframe(false), 2000);
   };
 
   if (isLoading) {
@@ -136,42 +196,107 @@ export default function EmbedPage() {
         <div className="space-y-4">
           {/* Step 1 */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-yellow-400 flex items-center justify-center text-zinc-950 font-bold text-xs shrink-0">
-                  1
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-full bg-yellow-400 flex items-center justify-center text-zinc-950 font-bold text-xs shrink-0">
+                    1
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-white">Copia el código del widget</h2>
+                    <p className="text-xs text-zinc-500">Selecciona el método de integración</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-sm font-bold text-white">Copia el código del widget</h2>
-                  <p className="text-xs text-zinc-500">Snippet HTML listo para pegar</p>
-                </div>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-1 mt-4 p-1 bg-zinc-950 border border-zinc-800 rounded-xl">
+                <button
+                  onClick={() => setActiveTab('script')}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    activeTab === 'script'
+                      ? 'bg-yellow-400 text-zinc-950 font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  🚀 Script Inteligente (Recomendado)
+                </button>
+                <button
+                  onClick={() => setActiveTab('iframe')}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    activeTab === 'iframe'
+                      ? 'bg-yellow-400 text-zinc-950 font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  📦 Iframe Estático
+                </button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="relative">
-                <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-xs text-zinc-300 font-mono overflow-x-auto leading-relaxed whitespace-pre-wrap break-all">
-                  {iframeCode}
-                </pre>
-                <button
-                  onClick={handleCopy}
-                  className={`absolute top-2.5 right-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    copied
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
-                      : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
-                  }`}
-                >
-                  {copied ? (
-                    <><CheckCircle className="w-3 h-3" />Copiado!</>
-                  ) : (
-                    <><Copy className="w-3 h-3" />Copiar</>
-                  )}
-                </button>
-              </div>
+              {activeTab === 'script' ? (
+                <>
+                  <div className="relative">
+                    <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-[10px] text-zinc-300 font-mono overflow-x-auto leading-relaxed whitespace-pre-wrap break-all max-h-72 overflow-y-auto">
+                      {scriptCode}
+                    </pre>
+                    <button
+                      onClick={handleCopyScript}
+                      className={`absolute top-2.5 right-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                        copiedScript
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
+                      }`}
+                    >
+                      {copiedScript ? (
+                        <><CheckCircle className="w-3 h-3" />Copiado!</>
+                      ) : (
+                        <><Copy className="w-3 h-3" />Copiar</>
+                      )}
+                    </button>
+                  </div>
+                  
+                  <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl text-xs text-blue-400 leading-relaxed">
+                    💡 <strong>¿Por qué usar el script?</strong> Ajusta dinámicamente el tamaño de la ventana de chat y evita bloquear las interacciones o clics en el fondo de tu sitio web cuando el chat está cerrado.
+                  </div>
 
-              <Button onClick={handleCopy} variant="primary" className="w-full" size="sm">
-                <Copy className="w-4 h-4" />
-                {copied ? '¡Código copiado!' : 'Copiar código'}
-              </Button>
+                  <Button onClick={handleCopyScript} variant="primary" className="w-full" size="sm">
+                    <Copy className="w-4 h-4" />
+                    {copiedScript ? '¡Código copiado!' : 'Copiar Script Inteligente'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="relative">
+                    <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-[10px] text-zinc-300 font-mono overflow-x-auto leading-relaxed whitespace-pre-wrap break-all max-h-72 overflow-y-auto">
+                      {iframeCode}
+                    </pre>
+                    <button
+                      onClick={handleCopyIframe}
+                      className={`absolute top-2.5 right-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                        copiedIframe
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
+                      }`}
+                    >
+                      {copiedIframe ? (
+                        <><CheckCircle className="w-3 h-3" />Copiado!</>
+                      ) : (
+                        <><Copy className="w-3 h-3" />Copiar</>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl text-xs text-amber-400 leading-relaxed">
+                    ⚠️ <strong>Nota:</strong> El iframe estático tiene un tamaño fijo de 400x620px. Puede impedir hacer clic en los elementos que queden detrás de él en la esquina inferior derecha de tu sitio web, incluso si el chat está cerrado.
+                  </div>
+
+                  <Button onClick={handleCopyIframe} variant="primary" className="w-full" size="sm">
+                    <Copy className="w-4 h-4" />
+                    {copiedIframe ? '¡Código copiado!' : 'Copiar Iframe Estático'}
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
 

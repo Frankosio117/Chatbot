@@ -101,5 +101,6 @@ select option {
 .embed-page body {
   background: transparent !important;
   background-color: transparent !important;
+  pointer-events: none !important;
 }
 
