@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
     if (decryptionSuccess && decrypted) {
       const phoneId = c.whatsapp_phone_id;
-      const toPhone = '5219613008003'; // Use the user's phone number
+      const toPhone = '529613008003'; // Use the normalized user's phone number without the mobile prefix '1'
       const url = `https://graph.facebook.com/v20.0/${phoneId}/messages`;
       
       const payload = {

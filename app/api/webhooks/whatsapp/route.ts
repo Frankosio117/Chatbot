@@ -234,6 +234,14 @@ FLUJO DE CONVERSACIÓN OBLIGATORIO:
 async function enviarRespuestaWhatsApp(phoneId: string, toPhone: string, text: string, token: string) {
   const url = `https://graph.facebook.com/v20.0/${phoneId}/messages`;
   
+  // Normalizar el número para México y Argentina (eliminar prefijo de red móvil '1' en MX y '9' en AR)
+  let cleanPhone = toPhone.replace(/\D/g, '');
+  if (cleanPhone.startsWith('521') && cleanPhone.length === 13) {
+    cleanPhone = '52' + cleanPhone.substring(3);
+  } else if (cleanPhone.startsWith('549') && cleanPhone.length === 13) {
+    cleanPhone = '54' + cleanPhone.substring(3);
+  }
+
   // Si la respuesta del bot contiene el tag markdown de imagen, podemos enviar un mensaje de texto.
   // WhatsApp Cloud API no renderiza imágenes de markdown inline. Sin embargo, para hacerlo
   // interactivo y premium, si el mensaje del bot tiene la sintaxis de imagen, podemos extraer la URL
@@ -256,7 +264,7 @@ async function enviarRespuestaWhatsApp(phoneId: string, toPhone: string, text: s
     const textPayload = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
-      to: toPhone,
+      to: cleanPhone,
       type: 'text',
       text: { body: textToSend }
     };
@@ -282,7 +290,7 @@ async function enviarRespuestaWhatsApp(phoneId: string, toPhone: string, text: s
     const imagePayload = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
-      to: toPhone,
+      to: cleanPhone,
       type: 'image',
       image: {
         link: imageUrlToSend,
