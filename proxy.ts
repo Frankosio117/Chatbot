@@ -114,6 +114,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Inject pathname header so the root layout can detect embed routes server-side
+  supabaseResponse.headers.set('x-pathname', request.nextUrl.pathname);
   return supabaseResponse;
 }
 
@@ -124,10 +126,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - embed (public chat embeds)
      * - api/chat (public chatbot API)
-     * Feel free to modify this pattern to include more paths.
+     * NOTE: /embed/ routes are now included so we can set the x-pathname header.
+     * Auth checks are skipped for embed routes (see logic above).
      */
-    '/((?!_next/static|_next/image|favicon.ico|embed|api/chat|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/chat|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
