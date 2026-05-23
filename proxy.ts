@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
             try {
               return request.cookies.getAll().map(({ name, value }) => ({ name, value }));
             } catch (err) {
-              console.error('Middleware: Error in cookies.getAll:', err);
+              console.error('Proxy: Error in cookies.getAll:', err);
               return [];
             }
           },
@@ -43,11 +43,11 @@ export async function middleware(request: NextRequest) {
                 try {
                   supabaseResponse.cookies.set(name, value, options);
                 } catch (err) {
-                  console.error('Middleware: Error setting cookie on response:', err);
+                  console.error('Proxy: Error setting cookie on response:', err);
                 }
               });
             } catch (err) {
-              console.error('Middleware: Error in cookies.setAll:', err);
+              console.error('Proxy: Error in cookies.setAll:', err);
             }
           },
         },
@@ -61,7 +61,7 @@ export async function middleware(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.error('Middleware: Error al obtener usuario:', userError.message);
+      console.error('Proxy: Error al obtener usuario:', userError.message);
     }
 
     const pathname = request.nextUrl.pathname;
@@ -83,7 +83,7 @@ export async function middleware(request: NextRequest) {
           .single();
 
         if (perfilError || perfil?.rol !== 'super_admin') {
-          console.warn('Middleware: Acceso denegado a super-admin:', perfilError?.message);
+          console.warn('Proxy: Acceso denegado a super-admin:', perfilError?.message);
           // No es super_admin, redirigir al dashboard de usuario
           const url = new URL('/dashboard/settings', request.url);
           return NextResponse.redirect(url);
@@ -106,7 +106,7 @@ export async function middleware(request: NextRequest) {
       }
     }
   } catch (err) {
-    console.error('Middleware: Error crítico no controlado:', err);
+    console.error('Proxy: Error crítico no controlado:', err);
     // En caso de fallo total, forzar redirección a login en rutas protegidas por seguridad
     const pathname = request.nextUrl.pathname;
     if (pathname.startsWith('/dashboard') || pathname.startsWith('/super-admin')) {
