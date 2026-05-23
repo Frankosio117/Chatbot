@@ -282,11 +282,9 @@ export default function ChatWidget({
     return <div className="space-y-1">{parts}</div>;
   };
 
-  const containerClass = absolutePosition
+  const containerClass = absolutePosition || isIframe
     ? "absolute bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-3 pointer-events-none font-sans"
-    : isIframe
-      ? "fixed bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-3 pointer-events-none font-sans"
-      : "fixed bottom-5 right-5 z-50 flex flex-col items-end p-0 pointer-events-auto font-sans";
+    : "fixed bottom-5 right-5 z-50 flex flex-col items-end p-0 pointer-events-auto font-sans";
 
   return (
     <div className={containerClass}>
