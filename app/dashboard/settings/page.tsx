@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [logoUrl, setLogoUrl] = useState('');
   const [instrucciones, setInstrucciones] = useState('');
   const [infoNegocio, setInfoNegocio] = useState('');
+  const [infoAdicional, setInfoAdicional] = useState('');
   // Bot identity
   const [botNombre, setBotNombre] = useState('Asistente Virtual');
   const [botAvatarUrl, setBotAvatarUrl] = useState('');
@@ -127,6 +128,30 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleAddInfoAdicional = () => {
+    if (!infoAdicional.trim()) return;
+
+    const fechaStr = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const divider = '\n\n=========================================\n' +
+                    `INFORMACIÓN ADICIONAL (${fechaStr})\n` +
+                    '=========================================\n';
+
+    setInfoNegocio((prev) => {
+      const base = prev.trim();
+      return base ? `${base}${divider}${infoAdicional.trim()}` : infoAdicional.trim();
+    });
+
+    setInfoAdicional('');
+    showMsg('success', 'Información adicional agregada. Guarda los cambios para aplicar permanentemente.');
   };
 
   // Upload image to Supabase Storage
@@ -504,6 +529,38 @@ export default function SettingsPage() {
                   Seleccionar Archivo
                   <input type="file" accept=".txt,.md" onChange={handleInfoFileUpload} className="hidden" />
                 </label>
+              </div>
+
+              {/* Agregar información adicional */}
+              <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl space-y-3">
+                <div className="space-y-0.5">
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                    Agregar Información Adicional
+                  </label>
+                  <p className="text-[11px] text-zinc-500">
+                    Anexa información rápida al final de la base de conocimiento sin tener que desplazarte por todo el documento.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                  <div className="flex-1">
+                    <Textarea
+                      value={infoAdicional}
+                      onChange={(e) => setInfoAdicional(e.target.value)}
+                      placeholder="Ej: Nuevo servicio a domicilio los domingos de 10:00 AM a 2:00 PM."
+                      rows={2}
+                      className="min-h-[60px]"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={handleAddInfoAdicional}
+                    disabled={!infoAdicional.trim()}
+                    className="sm:self-end px-5 py-2.5 h-[42px] shrink-0"
+                  >
+                    Agregar
+                  </Button>
+                </div>
               </div>
 
               <Textarea

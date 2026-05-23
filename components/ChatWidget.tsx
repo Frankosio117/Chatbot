@@ -227,6 +227,61 @@ export default function ChatWidget({
   const primaryContrast = getContrastColor(primaryColor);
   const botName = config.bot_nombre || 'Asistente Virtual';
 
+  const renderMessageContent = (text: string) => {
+    // Regex for matching markdown images: ![alt](url)
+    const imgRegex = /!\[(.*?)\]\((.*?)\)/g;
+    
+    if (!text.match(imgRegex)) {
+      return <p className="whitespace-pre-line">{text}</p>;
+    }
+
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match;
+
+    imgRegex.lastIndex = 0;
+
+    while ((match = imgRegex.exec(text)) !== null) {
+      const textPart = text.substring(lastIndex, match.index);
+      if (textPart) {
+        parts.push(
+          <span key={`txt-${lastIndex}`} className="whitespace-pre-line">
+            {textPart}
+          </span>
+        );
+      }
+
+      const alt = match[1];
+      const url = match[2];
+      parts.push(
+        <div key={`img-${match.index}`} className="my-2 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950/50 shadow-inner group relative">
+          <img 
+            src={url} 
+            alt={alt} 
+            className="w-full max-h-56 object-cover cursor-pointer hover:opacity-90 transition-all duration-200" 
+            onClick={() => window.open(url, '_blank')} 
+          />
+          <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-[10px] text-zinc-300 px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+            Click para ver en grande
+          </div>
+        </div>
+      );
+
+      lastIndex = imgRegex.lastIndex;
+    }
+
+    const remainingText = text.substring(lastIndex);
+    if (remainingText) {
+      parts.push(
+        <span key={`txt-${lastIndex}`} className="whitespace-pre-line">
+          {remainingText}
+        </span>
+      );
+    }
+
+    return <div className="space-y-1">{parts}</div>;
+  };
+
   const containerClass = absolutePosition
     ? "absolute bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-2 pointer-events-none font-sans"
     : isIframe
@@ -337,7 +392,7 @@ export default function ChatWidget({
                         : { background: 'rgba(255,255,255,0.07)', color: '#f4f4f5', border: '1px solid rgba(255,255,255,0.1)' }
                       }
                     >
-                      <p className="whitespace-pre-line">{msg.contenido}</p>
+                      {renderMessageContent(msg.contenido)}
                       <span className="block text-[9px] mt-1.5 font-mono opacity-50 text-right">
                         {new Date(msg.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>

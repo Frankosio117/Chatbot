@@ -68,6 +68,13 @@ INFORMACIÓN EXPLÍCITA DEL NEGOCIO (Tu único contexto y base de conocimiento):
 === INICIO DE INFORMACIÓN DEL NEGOCIO ===
 ${empresa.informacion_negocio || 'No hay información provista para este negocio.'}
 === FIN DE INFORMACIÓN DEL NEGOCIO ===
+${empresa.catalogo_imagen_url ? `
+MENÚ Y CATÁLOGO DE PRODUCTOS:
+- La empresa cuenta con una imagen de su menú, catálogo o lista de productos en la siguiente dirección URL: ${empresa.catalogo_imagen_url}
+- Si el usuario pregunta por el menú, catálogo, lista de productos, precios, carta, productos o temas relacionados, debes responder a su consulta e incluir OBLIGATORIAMENTE la siguiente sintaxis de Markdown al final de tu mensaje para mostrar la imagen:
+  ![Menú / Catálogo de Productos](${empresa.catalogo_imagen_url})
+- No inventes otros enlaces de imagen ni cambies esta sintaxis de Markdown.
+` : ''}
 
 FILTRO ESTRICTO ANTI-ALUCINACIONES:
 1. Solo debes responder preguntas utilizando la información explícita provista arriba.
@@ -408,23 +415,20 @@ async function generarRespuestaSimulada(
   }
 
   // Buscar respuestas relevantes dentro de la información comercial
-  if (msgLower.includes('precio') || msgLower.includes('costo') || msgLower.includes('cuanto cuesta') || msgLower.includes('servicios') || msgLower.includes('menu') || msgLower.includes('carta')) {
+  if (msgLower.includes('precio') || msgLower.includes('costo') || msgLower.includes('cuanto cuesta') || msgLower.includes('servicios') || msgLower.includes('menu') || msgLower.includes('carta') || msgLower.includes('catalogo') || msgLower.includes('producto') || msgLower.includes('lista')) {
+    let respuesta = '';
     if (empresa.id === 'spa-123' || empresa.nombre.toLowerCase().includes('spa')) {
-      return `¡Claro, ${conversacion.cliente_nombre}! Aquí tienes nuestros servicios y precios:
-🌸 Masaje Relajante Completo (60 min) - $500 MXN.
-🧘 Facial Hidratante Profundo (45 min) - $650 MXN.
-🍃 Circuito de Termas y Jacuzzi (120 min) - $800 MXN.
-
-¿Te gustaría agendar alguno de estos servicios hoy?`;
+      respuesta = `¡Claro, ${conversacion.cliente_nombre}! Aquí tienes nuestros servicios y precios:\n🌸 Masaje Relajante Completo (60 min) - $500 MXN.\n🧘 Facial Hidratante Profundo (45 min) - $650 MXN.\n🍃 Circuito de Termas y Jacuzzi (120 min) - $800 MXN.\n\n¿Te gustaría agendar alguno de estos servicios hoy?`;
     } else if (empresa.id === 'tacos-456' || empresa.nombre.toLowerCase().includes('taco')) {
-      return `¡Claro que sí, compadre! Aquí está el menú:
-🌮 Tacos al Pastor: $20 c/u.
-🥩 Tacos de Bistec: $25 c/u.
-🧀 Gringas de Pastor: $60 c/u.
-🥤 Aguas Frescas (Horchata y Jamaica) / Refrescos: $30 c/u.
-
-¿De qué te vamos a preparar y cuántos te mandamos?`;
+      respuesta = `¡Claro que sí, compadre! Aquí está el menú:\n🌮 Tacos al Pastor: $20 c/u.\n🥩 Tacos de Bistec: $25 c/u.\n🧀 Gringas de Pastor: $60 c/u.\n🥤 Aguas Frescas (Horchata y Jamaica) / Refrescos: $30 c/u.\n\n¿De qué te vamos a preparar y cuántos te mandamos?`;
+    } else {
+      respuesta = `¡Hola! Con gusto te puedo dar información sobre nuestros productos y servicios.`;
     }
+
+    if (empresa.catalogo_imagen_url) {
+      respuesta += `\n\nAquí tienes nuestro Menú / Catálogo de Productos:\n![Menú / Catálogo de Productos](${empresa.catalogo_imagen_url})`;
+    }
+    return respuesta;
   }
 
   if (msgLower.includes('horario') || msgLower.includes('cuando abren') || msgLower.includes('abierto') || msgLower.includes('dias')) {
