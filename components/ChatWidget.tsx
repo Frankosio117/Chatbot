@@ -228,8 +228,8 @@ export default function ChatWidget({
   const botName = config.bot_nombre || 'Asistente Virtual';
 
   const renderMessageContent = (text: string) => {
-    // Regex for matching markdown images: ![alt](url)
-    const imgRegex = /!\[(.*?)\]\((.*?)\)/g;
+    // Regex for matching markdown images, allowing spaces/newlines between ] and (
+    const imgRegex = /!\[([\s\S]*?)\]\s*\(([\s\S]*?)\)/g;
     
     if (!text.match(imgRegex)) {
       return <p className="whitespace-pre-line">{text}</p>;
@@ -251,8 +251,8 @@ export default function ChatWidget({
         );
       }
 
-      const alt = match[1];
-      const url = match[2];
+      const alt = match[1].trim();
+      const url = match[2].trim().replace(/\s+/g, '');
       parts.push(
         <div key={`img-${match.index}`} className="my-2 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950/50 shadow-inner group relative">
           <img 

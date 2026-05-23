@@ -71,8 +71,8 @@ ${empresa.informacion_negocio || 'No hay información provista para este negocio
 ${empresa.catalogo_imagen_url ? `
 MENÚ Y CATÁLOGO DE PRODUCTOS:
 - La empresa cuenta con una imagen de su menú, catálogo o lista de productos en la siguiente dirección URL: ${empresa.catalogo_imagen_url}
-- Si el usuario pregunta por el menú, catálogo, lista de productos, precios, carta, productos o temas relacionados, debes responder a su consulta e incluir OBLIGATORIAMENTE la siguiente sintaxis de Markdown al final de tu mensaje para mostrar la imagen:
-  ![Menú / Catálogo de Productos](${empresa.catalogo_imagen_url})
+- Si el usuario pregunta por el menú, catálogo, lista de productos, precios, carta, productos o temas relacionados, debes responder a su consulta e incluir OBLIGATORIAMENTE la siguiente sintaxis de Markdown exactamente al final de tu mensaje para mostrar la imagen: \`![Menú / Catálogo de Productos](${empresa.catalogo_imagen_url})\`
+- IMPORTANTE: Escribe la sintaxis de imagen completa en una sola línea. No dejes espacios ni añadas saltos de línea entre el corchete de cierre ']' y el paréntesis de apertura '(' (ej. NO escribas '![Alt]\\n(URL)' ni '![Alt] (URL)'). Debe ser continuo: '![Alt](URL)'.
 - No inventes otros enlaces de imagen ni cambies esta sintaxis de Markdown.
 ` : ''}
 
