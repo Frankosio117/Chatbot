@@ -220,9 +220,13 @@ FLUJO DE CONVERSACIÓN OBLIGATORIO:
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[WhatsApp Webhook] Error procesando webhook:', error);
-    return NextResponse.json({ error: 'Error interno en el servidor.' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Error interno en el servidor.',
+      details: error.message,
+      stack: error.stack
+    }, { status: 500 });
   }
 }
 
