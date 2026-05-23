@@ -88,7 +88,7 @@ function generarHighlightsSimulados(mensajes: { rol: string; contenido: string }
     });
   }
 
-  return highlights.slice(0, 4);
+  return highlights.slice(0, 8);
 }
 
 export async function POST(req: NextRequest) {
@@ -115,11 +115,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Conversación no encontrada' }, { status: 404 });
     }
 
-    // If already has highlights, return them
-    if (conv.highlights && conv.highlights.length > 0) {
-      return NextResponse.json({ highlights: conv.highlights });
-    }
-
     // Get messages
     const { data: mensajes } = await supabase
       .from('mensajes')
@@ -129,6 +124,16 @@ export async function POST(req: NextRequest) {
 
     if (!mensajes || mensajes.length === 0) {
       return NextResponse.json({ highlights: [] });
+    }
+
+    const currentMsgCount = mensajes.length;
+
+    // Check if the current highlights are up-to-date with the message count
+    if (conv.highlights && typeof conv.highlights === 'object' && !Array.isArray(conv.highlights)) {
+      const hObj = conv.highlights as any;
+      if (hObj.last_analyzed_count === currentMsgCount && Array.isArray(hObj.items)) {
+        return NextResponse.json({ highlights: hObj.items });
+      }
     }
 
     // Get LLM config
@@ -141,10 +146,13 @@ export async function POST(req: NextRequest) {
 
     if (!llmConfig) {
       const fallbackHighlights = generarHighlightsSimulados(mensajes);
-      // Guardar en BD para no recalcular
+      const highlightsPayload = {
+        last_analyzed_count: currentMsgCount,
+        items: fallbackHighlights
+      };
       await supabase
         .from('conversaciones')
-        .update({ highlights: fallbackHighlights })
+        .update({ highlights: highlightsPayload })
         .eq('id', conversacionId);
       return NextResponse.json({ highlights: fallbackHighlights });
     }
@@ -154,9 +162,13 @@ export async function POST(req: NextRequest) {
 
     if (esApiKeySimulada) {
       const fallbackHighlights = generarHighlightsSimulados(mensajes);
+      const highlightsPayload = {
+        last_analyzed_count: currentMsgCount,
+        items: fallbackHighlights
+      };
       await supabase
         .from('conversaciones')
-        .update({ highlights: fallbackHighlights })
+        .update({ highlights: highlightsPayload })
         .eq('id', conversacionId);
       return NextResponse.json({ highlights: fallbackHighlights });
     }
@@ -184,10 +196,10 @@ export async function POST(req: NextRequest) {
       const defaultModel = llmConfig.proveedor === 'google' ? 'gemini-1.5-flash' : 'gpt-4o-mini';
       const modelInstance = aiProvider(llmConfig.modelo_nombre || defaultModel);
 
-      // Call LLM to generate highlights
+      // Call LLM to generate highlights (up to 8)
       const { text } = await generateText({
         model: modelInstance,
-        prompt: `Analiza esta conversación de chatbot de negocio y genera entre 3 y 5 highlights clave en formato JSON.
+        prompt: `Analiza esta conversación de chatbot de negocio y genera hasta 8 highlights clave en formato JSON (mínimo 3, máximo 8).
 
 CONVERSACIÓN:
 ${transcript}
@@ -218,13 +230,19 @@ Array JSON:`,
       highlights = generarHighlightsSimulados(mensajes);
     }
 
-    // Save highlights to DB
+    // Save highlights to DB in structured format (max 8 items)
+    const finalHighlights = highlights.slice(0, 8);
+    const highlightsPayload = {
+      last_analyzed_count: currentMsgCount,
+      items: finalHighlights
+    };
+
     await supabase
       .from('conversaciones')
-      .update({ highlights })
+      .update({ highlights: highlightsPayload })
       .eq('id', conversacionId);
 
-    return NextResponse.json({ highlights });
+    return NextResponse.json({ highlights: finalHighlights });
   } catch (error) {
     const err = error as Error;
     console.error('Error general en endpoint de highlights:', err);

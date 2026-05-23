@@ -49,34 +49,42 @@ export default function LeadsPage() {
   const [empresaId, setEmpresaId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const autoGenerateHighlights = useCallback(async (leadsData: Lead[]) => {
-    const withoutHighlights = leadsData.filter((l) => !l.highlights || l.highlights.length === 0);
+
+  const refreshHighlightsForLead = useCallback(async (leadId: string, silent = false) => {
+    if (!silent) {
+      setLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, _loadingHighlights: true } : l));
+      setSelectedLead((prev) => prev?.id === leadId ? { ...prev, _loadingHighlights: true } : prev);
+    }
     
-    for (const lead of withoutHighlights) {
-      setLeads((prev) => prev.map((l) => l.id === lead.id ? { ...l, _loadingHighlights: true } : l));
+    try {
+      const res = await fetch('/api/leads/highlights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversacionId: leadId }),
+      });
       
-      try {
-        const res = await fetch('/api/leads/highlights', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ conversacionId: lead.id }),
-        });
-        
-        if (res.ok) {
-          const { highlights } = await res.json();
-          setLeads((prev) => prev.map((l) =>
-            l.id === lead.id ? { ...l, highlights, _loadingHighlights: false } : l
-          ));
-          // Update selected lead too
-          setSelectedLead((prev) => prev?.id === lead.id ? { ...prev, highlights } : prev);
-        } else {
-          setLeads((prev) => prev.map((l) => l.id === lead.id ? { ...l, _loadingHighlights: false } : l));
-        }
-      } catch {
-        setLeads((prev) => prev.map((l) => l.id === lead.id ? { ...l, _loadingHighlights: false } : l));
+      if (res.ok) {
+        const { highlights } = await res.json();
+        setLeads((prev) => prev.map((l) =>
+          l.id === leadId ? { ...l, highlights, _loadingHighlights: false } : l
+        ));
+        setSelectedLead((prev) => prev?.id === leadId ? { ...prev, highlights, _loadingHighlights: false } : prev);
+      } else {
+        setLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, _loadingHighlights: false } : l));
+        setSelectedLead((prev) => prev?.id === leadId ? { ...prev, _loadingHighlights: false } : prev);
       }
+    } catch {
+      setLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, _loadingHighlights: false } : l));
+      setSelectedLead((prev) => prev?.id === leadId ? { ...prev, _loadingHighlights: false } : prev);
     }
   }, []);
+
+  const autoGenerateHighlights = useCallback(async (leadsData: Lead[]) => {
+    const withoutHighlights = leadsData.filter((l) => !l.highlights || l.highlights.length === 0);
+    for (const lead of withoutHighlights) {
+      await refreshHighlightsForLead(lead.id, true);
+    }
+  }, [refreshHighlightsForLead]);
 
   const loadLeads = useCallback(async () => {
     setIsLoading(true);
@@ -111,13 +119,23 @@ export default function LeadsPage() {
           // Only show conversations with a name or whatsapp (real leads)
           const leadsData: Lead[] = convs
             .filter((c) => c.cliente_nombre || c.cliente_whatsapp)
-            .map((c) => ({
-              id: c.id,
-              cliente_nombre: c.cliente_nombre,
-              cliente_whatsapp: c.cliente_whatsapp,
-              fecha_inicio: c.fecha_inicio,
-              highlights: (c.highlights as Highlight[]) || null,
-            }));
+            .map((c) => {
+              let parsedHighlights: Highlight[] | null = null;
+              if (c.highlights) {
+                if (Array.isArray(c.highlights)) {
+                  parsedHighlights = c.highlights as Highlight[];
+                } else if (typeof c.highlights === 'object' && 'items' in c.highlights) {
+                  parsedHighlights = (c.highlights as any).items as Highlight[];
+                }
+              }
+              return {
+                id: c.id,
+                cliente_nombre: c.cliente_nombre,
+                cliente_whatsapp: c.cliente_whatsapp,
+                fecha_inicio: c.fecha_inicio,
+                highlights: parsedHighlights,
+              };
+            });
           setLeads(leadsData);
           autoGenerateHighlights(leadsData);
         } else {
@@ -239,7 +257,10 @@ export default function LeadsPage() {
             {leads.map((lead) => (
               <button
                 key={lead.id}
-                onClick={() => setSelectedLead(lead)}
+                onClick={() => {
+                  setSelectedLead(lead);
+                  refreshHighlightsForLead(lead.id);
+                }}
                 className={`w-full text-left p-4 rounded-xl border transition-all duration-150 ${
                   selectedLead?.id === lead.id
                     ? 'bg-yellow-400/10 border-yellow-400/30 text-yellow-400'
