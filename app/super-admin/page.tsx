@@ -14,6 +14,7 @@ import {
   vincularUsuarioEmpresa, 
   getGlobalLLMConfig, 
   getTotalMensajesCount,
+  getMensajesCountPorEmpresas,
   Empresa,
   Perfil,
   UsuarioEmpresa,
@@ -41,6 +42,7 @@ export default function SuperAdminPage() {
   
   // Contadores
   const [totalMensajes, setTotalMensajes] = useState(0);
+  const [mensajesPorEmpresa, setMensajesPorEmpresa] = useState<Record<string, number>>({});
 
   // Formulario Nueva Empresa
   const [nuevaEmpresaNombre, setNuevaEmpresaNombre] = useState('');
@@ -91,6 +93,9 @@ export default function SuperAdminPage() {
       // Obtener el conteo real de mensajes procesados desde Supabase
       const msgCount = await getTotalMensajesCount();
       setTotalMensajes(msgCount);
+
+      const msgCounts = await getMensajesCountPorEmpresas();
+      setMensajesPorEmpresa(msgCounts);
 
       // Inicializar selectors
       if (usrs.length > 0) setVinculoUserId(usrs[0].id);
@@ -504,6 +509,7 @@ export default function SuperAdminPage() {
                     <tr className="bg-zinc-950/50 border-y border-zinc-800 text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
                       <th className="p-4">Nombre del Negocio</th>
                       <th className="p-4">ID / Referencia</th>
+                      <th className="p-4">Mensajes Consumidos</th>
                       <th className="p-4">Administradores Vinculados</th>
                       <th className="p-4">Fecha Alta</th>
                     </tr>
@@ -521,6 +527,9 @@ export default function SuperAdminPage() {
                         <tr key={emp.id} className="hover:bg-zinc-800/30 transition-colors">
                           <td className="p-4 font-bold text-zinc-100">{emp.nombre}</td>
                           <td className="p-4 font-mono text-[10px] text-zinc-500">{emp.id}</td>
+                          <td className="p-4 font-semibold text-zinc-300 font-mono">
+                            {mensajesPorEmpresa[emp.id] || 0}
+                          </td>
                           <td className="p-4">
                             {admins.length === 0 ? (
                               <span className="text-[10px] text-rose-400 font-medium">Sin administrador</span>

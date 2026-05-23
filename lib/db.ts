@@ -307,3 +307,129 @@ export async function getTotalMensajesCount(): Promise<number> {
   }
   return count || 0;
 }
+
+export async function getMensajesCountPorEmpresas(): Promise<Record<string, number>> {
+  const { data, error } = await getSupabase()
+    .from('conversaciones')
+    .select('empresa_id, mensajes(id)');
+    
+  if (error || !data) {
+    console.error('Error fetching message counts:', error);
+    return {};
+  }
+  
+  const counts: Record<string, number> = {};
+  data.forEach((conv: any) => {
+    const empId = conv.empresa_id;
+    const msgCount = conv.mensajes ? conv.mensajes.length : 0;
+    counts[empId] = (counts[empId] || 0) + msgCount;
+  });
+  
+  return counts;
+}
+
+export async function getMetricsPorEmpresa(empresaId: string) {
+  const supabaseClient = getSupabase();
+  
+  // 1. Total Conversaciones
+  const { count: totalConvs, error: convError } = await supabaseClient
+    .from('conversaciones')
+    .select('*', { count: 'exact', head: true })
+    .eq('empresa_id', empresaId);
+    
+  if (convError) console.error('Error fetching total conversations:', convError);
+
+  // 2. Total Leads (conversations with whatsapp phone registered)
+  const { count: totalLeads, error: leadError } = await supabaseClient
+    .from('conversaciones')
+    .select('*', { count: 'exact', head: true })
+    .eq('empresa_id', empresaId)
+    .not('cliente_whatsapp', 'is', null);
+
+  if (leadError) console.error('Error fetching total leads:', leadError);
+
+  // 3. Total Mensajes
+  const { data: convs } = await supabaseClient
+    .from('conversaciones')
+    .select('id')
+    .eq('empresa_id', empresaId);
+
+  let totalMsgs = 0;
+  let mensajesPorDia: { fecha: string; count: number }[] = [];
+  let conversacionesPorDia: { fecha: string; count: number }[] = [];
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  if (convs && convs.length > 0) {
+    const ids = convs.map((c) => c.id);
+
+    // Get total messages count
+    const { count: msgCount, error: msgError } = await supabaseClient
+      .from('mensajes')
+      .select('*', { count: 'exact', head: true })
+      .in('conversacion_id', ids);
+
+    if (!msgError && msgCount !== null) {
+      totalMsgs = msgCount;
+    }
+
+    // Get messages for last 7 days to group them
+    const { data: msgsData } = await supabaseClient
+      .from('mensajes')
+      .select('fecha')
+      .in('conversacion_id', ids)
+      .gte('fecha', sevenDaysAgo.toISOString());
+
+    if (msgsData) {
+      const msgGroups: Record<string, number> = {};
+      // Initialize last 7 days
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        msgGroups[d.toLocaleDateString([], { month: 'short', day: 'numeric' })] = 0;
+      }
+
+      msgsData.forEach((m) => {
+        const dateStr = new Date(m.fecha).toLocaleDateString([], { month: 'short', day: 'numeric' });
+        if (msgGroups[dateStr] !== undefined) {
+          msgGroups[dateStr]++;
+        }
+      });
+
+      mensajesPorDia = Object.entries(msgGroups).map(([fecha, count]) => ({ fecha, count }));
+    }
+  }
+
+  // Get conversations for last 7 days
+  const { data: convsData } = await supabaseClient
+    .from('conversaciones')
+    .select('fecha_inicio')
+    .eq('empresa_id', empresaId)
+    .gte('fecha_inicio', sevenDaysAgo.toISOString());
+
+  const convGroups: Record<string, number> = {};
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    convGroups[d.toLocaleDateString([], { month: 'short', day: 'numeric' })] = 0;
+  }
+
+  if (convsData) {
+    convsData.forEach((c) => {
+      const dateStr = new Date(c.fecha_inicio).toLocaleDateString([], { month: 'short', day: 'numeric' });
+      if (convGroups[dateStr] !== undefined) {
+        convGroups[dateStr]++;
+      }
+    });
+  }
+  conversacionesPorDia = Object.entries(convGroups).map(([fecha, count]) => ({ fecha, count }));
+
+  return {
+    totalConversaciones: totalConvs || 0,
+    totalLeads: totalLeads || 0,
+    totalMensajes: totalMsgs,
+    mensajesPorDia,
+    conversacionesPorDia,
+  };
+}

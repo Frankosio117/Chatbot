@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Settings, Play, Zap, Building2, Menu, X, LogOut, ChevronDown, Users2, Code2, MessageCircle } from 'lucide-react';
+import { Settings, Play, Zap, Building2, Menu, X, LogOut, ChevronDown, Users2, Code2, MessageCircle, LayoutDashboard } from 'lucide-react';
 import { getEmpresas } from '@/lib/db';
 import { signOut, getCurrentUser } from '@/lib/auth';
 
@@ -61,6 +61,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const activeEmpresa = empresas.find((e) => e.id === activeEmpresaId);
 
   const navItems = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Configuración Bot', href: '/dashboard/settings', icon: Settings },
     { name: 'Integración WhatsApp', href: '/dashboard/whatsapp', icon: MessageCircle },
     { name: 'Playground', href: '/dashboard/playground', icon: Play },
