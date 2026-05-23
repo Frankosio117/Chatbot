@@ -273,7 +273,7 @@ async function enviarRespuestaWhatsApp(phoneId: string, toPhone: string, text: s
     if (!res.ok) {
       const err = await res.json();
       console.error('[WhatsApp Webhook] Error al enviar mensaje de texto a Meta:', JSON.stringify(err));
-      throw new Error('Fallo enviando texto de WhatsApp');
+      // Logueamos el error pero no lanzamos excepción para que la petición responda 200 y Meta no reintente
     }
   }
 
