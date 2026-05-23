@@ -16,7 +16,8 @@ export default function EmbedPage() {
 
   useEffect(() => {
     setTimeout(() => {
-      setBaseUrl(window.location.origin);
+      // Usar la URL de producción para garantizar que la integración externa no dependa de URLs de vista previa
+      setBaseUrl('https://chatbot-tau-jet-49.vercel.app');
     }, 0);
 
     async function loadEmpresa() {
