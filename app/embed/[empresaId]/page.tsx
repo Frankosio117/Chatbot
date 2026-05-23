@@ -11,7 +11,8 @@ export default async function EmbedPage({ params }: PageProps) {
     <>
       <style>{`
         html, body {
-          background: transparent !important;
+          background-color: transparent !important;
+          background-image: none !important;
           overflow: hidden !important;
           width: 100% !important;
           height: 100% !important;

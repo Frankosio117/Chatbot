@@ -97,10 +97,10 @@ select option {
 }
 
 /* ---- EMBED SPECIFIC STYLES ---- */
-.embed-page,
-.embed-page body {
-  background: transparent !important;
+html.embed-page,
+html.embed-page body {
   background-color: transparent !important;
+  background-image: none !important;
   pointer-events: none !important;
 }
 

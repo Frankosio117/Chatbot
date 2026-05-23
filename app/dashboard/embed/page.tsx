@@ -91,13 +91,14 @@ export default function EmbedPage() {
     iframe.style.zIndex = '999999';
     iframe.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
     iframe.style.background = 'transparent';
+    iframe.setAttribute('allowtransparency', 'true');
     iframe.setAttribute('allow', 'microphone');
     iframe.setAttribute('title', 'Chat de soporte');
     
     document.body.appendChild(iframe);
 
     window.addEventListener('message', function(event) {
-      if (event.origin !== baseUrl) return;
+      if (event.origin !== baseUrl && event.origin.indexOf('chatbot-tau-jet-49.vercel.app') === -1) return;
       if (event.data === 'chat-open') {
         if (window.innerWidth < 640) {
           iframe.style.width = '100%';
@@ -127,6 +128,7 @@ export default function EmbedPage() {
 <iframe
   src="${embedUrl}"
   style="position:fixed;bottom:20px;right:20px;width:400px;height:620px;border:none;z-index:999999;background:transparent;"
+  allowtransparency="true"
   allow="microphone"
   title="Chat de soporte"
 ></iframe>
