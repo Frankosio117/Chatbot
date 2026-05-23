@@ -28,9 +28,6 @@ export function encrypt(text: string): string {
   }
 }
 
-/**
- * Desencripta un texto cifrado.
- */
 export function decrypt(encryptedText: string): string {
   try {
     if (encryptedText.startsWith('mock-encrypted:')) {
@@ -57,7 +54,32 @@ export function decrypt(encryptedText: string): string {
     
     return decrypted;
   } catch (error) {
-    console.error('Error al desencriptar:', error);
+    console.warn('Error al desencriptar con clave principal:', error instanceof Error ? error.message : error);
+    
+    // Fallback: Intentar desencriptar con la clave por defecto
+    const DEFAULT_FALLBACK_KEY = 'vibe-coding-secret-key-32-chars-long!';
+    try {
+      const parts = encryptedText.split(':');
+      if (parts.length === 3) {
+        const iv = Buffer.from(parts[0], 'hex');
+        const authTag = Buffer.from(parts[1], 'hex');
+        const encrypted = parts[2];
+        
+        const key = Buffer.concat([Buffer.from(DEFAULT_FALLBACK_KEY)], 32);
+        const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+        
+        decipher.setAuthTag(authTag);
+        
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        
+        console.log('Desencriptado exitoso usando la clave de fallback por defecto.');
+        return decrypted;
+      }
+    } catch (fallbackError) {
+      console.error('Error al desencriptar con clave de fallback:', fallbackError);
+    }
+    
     // Retornar el texto original si no se pudo desencriptar (ej. si no estaba encriptado)
     return encryptedText;
   }

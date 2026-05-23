@@ -13,14 +13,12 @@ import {
   createEmpresa, 
   vincularUsuarioEmpresa, 
   getGlobalLLMConfig, 
-  updateGlobalLLMConfig, 
   getTotalMensajesCount,
   Empresa,
   Perfil,
   UsuarioEmpresa,
   ConfigLLM
 } from '@/lib/db';
-import { encrypt } from '@/lib/crypto';
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -136,23 +134,45 @@ export default function SuperAdminPage() {
     setAlertMsg(null);
 
     try {
-      const updates: Partial<Omit<ConfigLLM, 'id'>> = {
+      const body: any = {
         proveedor: llmProveedor,
         modelo_nombre: llmModelo,
         temperatura: Number(llmTemperatura)
       };
 
-      // Si el Super Admin escribió una nueva API Key, la encriptamos antes de guardar
+      // Si el Super Admin escribió una nueva API Key, la enviamos al servidor para encriptación segura
       if (llmApiKey.trim() !== '') {
-        updates.api_key_encriptada = encrypt(llmApiKey.trim());
+        body.api_key = llmApiKey.trim();
       }
 
-      await updateGlobalLLMConfig(updates);
+      const response = await fetch('/api/admin/llm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        throw new Error(resData.error || 'Error al actualizar la configuración del LLM.');
+      }
+
       setAlertMsg({ type: 'success', text: 'Configuración global del LLM actualizada correctamente.' });
       setLlmApiKey(''); // Limpiar campo
-    } catch (err) {
+
+      // Actualizar estado local
+      if (llmConfig) {
+        setLlmConfig({
+          ...llmConfig,
+          proveedor: llmProveedor,
+          modelo_nombre: llmModelo,
+          temperatura: Number(llmTemperatura)
+        });
+      }
+    } catch (err: any) {
       console.error('Error al guardar LLM:', err);
-      setAlertMsg({ type: 'error', text: 'Ocurrió un error al guardar la configuración del LLM.' });
+      setAlertMsg({ type: 'error', text: err.message || 'Ocurrió un error al guardar la configuración del LLM.' });
     } finally {
       setIsSavingLLM(false);
       setTimeout(() => setAlertMsg(null), 4000);
