@@ -283,10 +283,10 @@ export default function ChatWidget({
   };
 
   const containerClass = absolutePosition
-    ? "absolute bottom-0 right-0 w-full h-full flex flex-col items-end justify-end sm:p-2 p-0 pointer-events-none font-sans"
+    ? "absolute bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-3 pointer-events-none font-sans"
     : isIframe
-      ? "fixed bottom-0 right-0 w-full h-full flex flex-col items-end justify-end sm:p-2 p-0 pointer-events-none font-sans"
-      : "fixed bottom-0 right-0 sm:bottom-5 sm:right-5 z-50 flex flex-col items-end sm:p-0 p-0 pointer-events-none sm:pointer-events-auto font-sans";
+      ? "fixed bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-3 pointer-events-none font-sans"
+      : "fixed bottom-5 right-5 z-50 flex flex-col items-end p-0 pointer-events-auto font-sans";
 
   return (
     <div className={containerClass}>
@@ -294,7 +294,7 @@ export default function ChatWidget({
       {/* Chat Window */}
       {isOpen && (
         <div
-          className="w-full sm:w-[400px] h-full sm:h-[540px] sm:mb-3 border-0 sm:border border-zinc-800/80 rounded-none sm:rounded-2xl shadow-none sm:shadow-2xl shadow-black/60 flex flex-col overflow-hidden animate-scale-in pointer-events-auto"
+          className="mb-3 w-[360px] max-w-[calc(100vw-24px)] h-[500px] max-h-[calc(100vh-100px)] border border-zinc-800/80 rounded-2xl shadow-2xl shadow-black/60 flex flex-col overflow-hidden animate-scale-in pointer-events-auto"
           style={{ background: secondaryColor }}
         >
           {/* Header */}
@@ -453,9 +453,7 @@ export default function ChatWidget({
       {/* Floating Button */}
       <button
         onClick={() => handleToggleOpen(!isOpen)}
-        className={`${
-          isOpen ? 'hidden sm:flex' : 'flex'
-        } rounded-full items-center justify-center shadow-xl active:scale-95 hover:scale-105 transition-all duration-200 animate-pulse-glow pointer-events-auto`}
+        className="flex rounded-full items-center justify-center shadow-xl active:scale-95 hover:scale-105 transition-all duration-200 animate-pulse-glow pointer-events-auto"
         style={{
           width: '52px', height: '52px',
           background: primaryColor,

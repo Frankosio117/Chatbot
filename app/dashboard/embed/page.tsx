@@ -70,34 +70,38 @@ export default function EmbedPage() {
   
   const iframeCode = empresaId
     ? `<!-- AgentSaaS Chatbot Widget (Responsive) -->
-<style>
-  .agentsaas-chat-iframe {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 400px;
-    height: 620px;
-    border: none;
-    z-index: 999999;
-    background: transparent;
-    transition: all 0.2s ease;
-  }
-  @media (max-width: 640px) {
-    .agentsaas-chat-iframe {
-      bottom: 0 !important;
-      right: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-    }
-  }
-</style>
 <iframe
   src="${embedUrl}"
-  class="agentsaas-chat-iframe"
+  id="agentsaas-chat-iframe"
+  style="position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; border: none; z-index: 999999; background: transparent; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden;"
   allowtransparency="true"
   allow="microphone"
   title="Chat de soporte"
 ></iframe>
+<script>
+  window.addEventListener('message', function(e) {
+    var iframe = document.getElementById('agentsaas-chat-iframe');
+    if (!iframe) return;
+    if (e.data === 'chat-open') {
+      if (window.innerWidth < 640) {
+        iframe.style.bottom = '0';
+        iframe.style.right = '0';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+      } else {
+        iframe.style.bottom = '20px';
+        iframe.style.right = '20px';
+        iframe.style.width = '390px';
+        iframe.style.height = '600px';
+      }
+    } else if (e.data === 'chat-close') {
+      iframe.style.bottom = '20px';
+      iframe.style.right = '20px';
+      iframe.style.width = '80px';
+      iframe.style.height = '80px';
+    }
+  });
+</script>
 <!-- Fin AgentSaaS Chatbot Widget -->`
     : '<!-- Cargando... -->';
 
@@ -194,7 +198,7 @@ export default function EmbedPage() {
               </div>
 
               <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl text-xs text-blue-400 leading-relaxed">
-                💡 <strong>Integración Adaptativa:</strong> Este código utiliza un iframe de 400x620px en pantallas grandes y se expande automáticamente a pantalla completa (100% de ancho y alto) en dispositivos móviles para ofrecer una navegación web fluida y premium.
+                💡 <strong>Integración Inteligente:</strong> Este código inicia el chat minimizado en un cuadro de 80x80px en la esquina para no interferir con la navegación de tu sitio, y se expande dinámicamente al abrirse (a 390x600px en escritorio o pantalla completa en móviles).
               </div>
 
               <Button onClick={handleCopyIframe} variant="primary" className="w-full" size="sm">
