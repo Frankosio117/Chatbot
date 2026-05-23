@@ -20,9 +20,32 @@ export async function GET(req: NextRequest) {
   const GLOBAL_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'chatbot_whatsapp_verify_token';
 
   if (mode && token) {
-    if (mode === 'subscribe' && token === GLOBAL_VERIFY_TOKEN) {
-      console.log('[WhatsApp Webhook] Verificado con éxito.');
-      return new Response(challenge, { status: 200 });
+    if (mode === 'subscribe') {
+      // Caso 1: Coincide con el token de verificación global
+      if (token === GLOBAL_VERIFY_TOKEN) {
+        console.log('[WhatsApp Webhook] Verificado con éxito (token global).');
+        return new Response(challenge, { status: 200 });
+      }
+
+      // Caso 2: Buscar en la base de datos si alguna empresa tiene este verify token
+      try {
+        if (supabase) {
+          const { data, error } = await supabase
+            .from('empresas')
+            .select('id')
+            .eq('whatsapp_verify_token', token)
+            .limit(1);
+
+          if (!error && data && data.length > 0) {
+            console.log('[WhatsApp Webhook] Verificado con éxito (token de empresa).');
+            return new Response(challenge, { status: 200 });
+          } else if (error) {
+            console.error('[WhatsApp Webhook] Error querying verify token:', error);
+          }
+        }
+      } catch (err: any) {
+        console.error('[WhatsApp Webhook] Error al validar verify_token en base de datos:', err.message);
+      }
     }
   }
   
