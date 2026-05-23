@@ -229,7 +229,7 @@ export default function ChatWidget({
 
   const isAbsolute = absolutePosition || isIframe;
   const containerClass = isAbsolute
-    ? "absolute bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-3 pointer-events-none font-sans"
+    ? "absolute bottom-0 right-0 w-full h-full flex flex-col items-end justify-end p-2 pointer-events-none font-sans"
     : "fixed bottom-5 right-5 z-50 flex flex-col items-end font-sans";
 
   return (

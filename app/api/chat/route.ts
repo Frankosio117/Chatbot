@@ -62,7 +62,7 @@ Eres un Agente de IA Conversacional experto y profesional.
 Tu objetivo es atender a los clientes del negocio local "${empresa.nombre}".
 
 PERSONALIDAD E INSTRUCCIONES DE COMPORTAMIENTO:
-${previewInstructions || empresa.instrucciones_bot}
+${previewInstructions || empresa.instrucciones_bot || ''}
 
 INFORMACIÓN EXPLÍCITA DEL NEGOCIO (Tu único contexto y base de conocimiento):
 === INICIO DE INFORMACIÓN DEL NEGOCIO ===
@@ -385,7 +385,8 @@ async function generarRespuestaSimulada(
       return `¡Muchas gracias por tu WhatsApp! Para completar tu registro y poder darte el servicio, ¿me podrías indicar tu Nombre por favor?`;
     }
     // Saludo inicial y petición
-    const saludoPersonalizado = empresa.instrucciones_bot.includes('Qué onda') 
+    const botInstrucciones = empresa.instrucciones_bot || '';
+    const saludoPersonalizado = botInstrucciones.includes('Qué onda') 
       ? '¡Qué onda! Bienvenido.' 
       : '¡Hola! Bienvenido.';
       
@@ -453,7 +454,8 @@ async function generarRespuestaSimulada(
   }
 
   // Respuesta por defecto adaptada a la personalidad
-  const despedidaSimulada = (empresa.instrucciones_bot.includes('Qué onda') || empresa.nombre.toLowerCase().includes('taco'))
+  const botInstruccionesDesp = empresa.instrucciones_bot || '';
+  const despedidaSimulada = (botInstruccionesDesp.includes('Qué onda') || empresa.nombre.toLowerCase().includes('taco'))
     ? `¡Excelente, ${conversacion.cliente_nombre}! Dime, ¿en qué más te puedo ayudar sobre el menú de tacos o el servicio a domicilio? 🌮`
     : `Entendido, ${conversacion.cliente_nombre}. Recuerda que estoy aquí para responder tus dudas sobre nuestros masajes, faciales o el circuito de hidroterapia en Spa Zen Relax. 🧘`;
 
