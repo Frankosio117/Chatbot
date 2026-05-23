@@ -135,7 +135,7 @@ FLUJO DE CONVERSACIÓN OBLIGATORIO:
       aiProvider = createOpenAI({ apiKey });
     }
 
-    const defaultModel = llmConfig.proveedor === 'google' ? 'gemini-3.1-flash-lite' : 'gpt-4o-mini';
+    const defaultModel = llmConfig.proveedor === 'google' ? 'gemini-1.5-flash' : 'gpt-4o-mini';
     const modelInstance = aiProvider(llmConfig.modelo_nombre || defaultModel);
 
     const result = streamText({
