@@ -208,7 +208,7 @@ export async function getGlobalLLMConfig(): Promise<ConfigLLM> {
     console.warn('No active global LLM configuration found in database. Initializing with environment variables.');
     const fallbackApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || '';
     const fallbackProvider = (process.env.DEFAULT_LLM_PROVIDER as 'openai' | 'anthropic' | 'deepseek' | 'google') || 'google';
-    const fallbackModel = process.env.DEFAULT_LLM_MODEL || (fallbackProvider === 'google' ? 'gemini-1.5-flash' : 'gpt-4o-mini');
+    const fallbackModel = process.env.DEFAULT_LLM_MODEL || (fallbackProvider === 'google' ? 'gemini-3.1-flash-lite' : 'gpt-4o-mini');
     
     const newConfig = {
       proveedor: fallbackProvider,

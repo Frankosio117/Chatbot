@@ -118,7 +118,7 @@ export default function SuperAdminPage() {
   const handleProveedorChange = (val: 'openai' | 'anthropic' | 'deepseek' | 'google') => {
     setLlmProveedor(val);
     if (val === 'google') {
-      setLlmModelo('gemini-1.5-flash');
+      setLlmModelo('gemini-3.1-flash-lite');
     } else if (val === 'openai') {
       setLlmModelo('gpt-4o-mini');
     } else if (val === 'anthropic') {
