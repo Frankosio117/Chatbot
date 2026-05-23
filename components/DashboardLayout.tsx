@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Settings, Play, Zap, Building2, Menu, X, LogOut, ChevronDown, Users2, Code2 } from 'lucide-react';
+import { Settings, Play, Zap, Building2, Menu, X, LogOut, ChevronDown, Users2, Code2, MessageCircle } from 'lucide-react';
 import { getEmpresas } from '@/lib/db';
 import { signOut, getCurrentUser } from '@/lib/auth';
 
@@ -35,6 +35,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         setActiveEmpresaId(list[0].id);
         sessionStorage.setItem('saas_active_empresa_id', list[0].id);
         window.dispatchEvent(new Event('active_company_changed'));
+        router.refresh();
       } else {
         setActiveEmpresaId('');
         sessionStorage.removeItem('saas_active_empresa_id');
@@ -60,7 +61,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const activeEmpresa = empresas.find((e) => e.id === activeEmpresaId);
 
   const navItems = [
-    { name: 'Configuración', href: '/dashboard/settings', icon: Settings },
+    { name: 'Configuración Bot', href: '/dashboard/settings', icon: Settings },
+    { name: 'Integración WhatsApp', href: '/dashboard/whatsapp', icon: MessageCircle },
     { name: 'Playground', href: '/dashboard/playground', icon: Play },
     { name: 'Leads', href: '/dashboard/leads', icon: Users2 },
     { name: 'Integrar en mi Web', href: '/dashboard/embed', icon: Code2 },
